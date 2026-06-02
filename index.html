@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khoro Tshivhula — Credit Risk & Data Science</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c;
+    --cream: #f7f3ec;
+    --warm: #ede5d4;
+    --rust: #b84a1e;
+    --rust-dim: #d4724a;
+    --gold: #c09a4e;
+    --olive: #4a4e3a;
+    --mist: #cfc8b8;
+    --dark: #1a1915;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* grain */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+    padding: 1.1rem 5vw;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(247,243,236,0.9);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--mist);
+  }
+  .nav-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem; letter-spacing: 0.18em; color: var(--rust);
+    text-decoration: none;
+  }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--olive); text-decoration: none; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--rust); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: grid; grid-template-columns: 55% 45%;
+    padding-top: 5rem;
+    position: relative; overflow: hidden;
+  }
+
+  .hero-left {
+    padding: 6vw 5vw 6vw 5vw;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; z-index: 2;
+  }
+
+  .hero-right {
+    background: var(--dark);
+    padding: 6vw 4vw;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-right::before {
+    content: '';
+    position: absolute; top: -30%; right: -20%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(184,74,30,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--rust);
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .eyebrow::before {
+    content: ''; display: inline-block;
+    width: 2.5rem; height: 1px; background: var(--rust);
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.2rem, 5.5vw, 6rem);
+    line-height: 1.0; font-weight: 700;
+    color: var(--ink); margin-bottom: 1.75rem;
+  }
+  h1 em { font-style: italic; color: var(--rust); }
+
+  .hero-summary {
+    font-size: 1rem; color: var(--olive);
+    max-width: 48ch; line-height: 1.85;
+    margin-bottom: 2.75rem;
+  }
+
+  .dual-cta { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.85rem 2rem;
+    font-family: 'DM Mono', monospace; font-size: 0.72rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: all 0.22s;
+  }
+  .btn-primary { background: var(--rust); color: white; }
+  .btn-primary:hover { background: var(--ink); }
+  .btn-outline { background: transparent; color: var(--olive); border: 1px solid var(--olive); }
+  .btn-outline:hover { background: var(--olive); color: var(--cream); }
+
+  /* right-side stats */
+  .hero-stats {
+    display: flex; flex-direction: column; gap: 0;
+  }
+  .hstat {
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 1.75rem 0;
+    opacity: 0; transform: translateX(20px);
+    animation: slideIn 0.5s ease forwards;
+  }
+  .hstat:nth-child(1){animation-delay:0.2s}
+  .hstat:nth-child(2){animation-delay:0.38s}
+  .hstat:nth-child(3){animation-delay:0.56s}
+  .hstat:nth-child(4){animation-delay:0.74s}
+  @keyframes slideIn { to { opacity:1; transform:translateX(0); } }
+
+  .hstat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.8rem; font-weight: 700;
+    color: var(--rust-dim); line-height: 1;
+  }
+  .hstat-label {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: #888; margin-top: 0.3rem;
+  }
+
+  /* ── SECTIONS shared ── */
+  section { padding: 7rem 5vw; }
+
+  .sh {
+    display: flex; align-items: baseline; gap: 1.2rem;
+    margin-bottom: 3.5rem;
+  }
+  .sh-num {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    color: var(--rust); letter-spacing: 0.15em;
+  }
+  h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.9rem, 3vw, 3rem); font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* ── DUAL-TRACK SECTION ── */
+  .dualtrack { background: var(--warm); }
+  .dualtrack h2 { color: var(--ink); }
+
+  .tracks {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+  }
+
+  .track-head {
+    font-family: 'DM Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--rust); margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--mist);
+  }
+
+  .track-body {
+    font-size: 0.95rem; color: var(--olive); line-height: 1.85;
+  }
+
+  .pill-group { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 1.25rem; }
+  .pill {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--mist); color: var(--olive);
+    letter-spacing: 0.04em; transition: all 0.18s;
+  }
+  .pill:hover { border-color: var(--rust); color: var(--rust); }
+  .pill.gold { border-color: var(--gold); color: var(--gold); }
+
+  /* ── EXPERIENCE ── */
+  .experience { background: var(--dark); }
+  .experience h2 { color: var(--cream); }
+  .experience .sh-num { color: var(--rust-dim); }
+
+  .exp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5px; background: #2a2820;
+    border: 1.5px solid #2a2820;
+  }
+  .exp-card {
+    background: var(--dark); padding: 2.25rem 2.5rem;
+    transition: background 0.22s;
+  }
+  .exp-card:hover { background: #201f1b; }
+
+  .exp-period {
+    font-family: 'DM Mono', monospace; font-size: 0.67rem;
+    letter-spacing: 0.12em; color: var(--rust-dim);
+    text-transform: uppercase; margin-bottom: 0.6rem;
+  }
+  .exp-role {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; font-weight: 600;
+    color: var(--cream); margin-bottom: 0.2rem; line-height: 1.2;
+  }
+  .exp-org {
+    font-family: 'DM Mono', monospace; font-size: 0.72rem;
+    color: var(--gold); margin-bottom: 1rem; letter-spacing: 0.05em;
+  }
+  .exp-bullets {
+    list-style: none; display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .exp-bullets li {
+    font-size: 0.875rem; color: #999; line-height: 1.65;
+    padding-left: 1rem; position: relative;
+  }
+  .exp-bullets li::before {
+    content: '—'; position: absolute; left: 0; color: var(--rust-dim);
+  }
+
+  /* ── PROJECTS ── */
+  .projects { background: var(--cream); }
+
+  .proj-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5px; background: var(--mist);
+    border: 1.5px solid var(--mist);
+  }
+  .proj-card {
+    background: var(--cream); padding: 2.25rem 2rem;
+    display: flex; flex-direction: column;
+    text-decoration: none; color: inherit;
+    transition: background 0.22s;
+  }
+  .proj-card:hover { background: var(--warm); }
+
+  .proj-icon { font-size: 1.6rem; margin-bottom: 0.9rem; }
+  .proj-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem; font-weight: 700;
+    color: var(--ink); margin-bottom: 0.6rem; line-height: 1.25;
+  }
+  .proj-desc {
+    font-size: 0.87rem; color: var(--olive); line-height: 1.7; flex: 1;
+    margin-bottom: 1.25rem;
+  }
+  .proj-foot {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .proj-tech {
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    color: var(--rust); letter-spacing: 0.06em;
+  }
+  .proj-link {
+    font-family: 'DM Mono', monospace; font-size: 0.65rem;
+    letter-spacing: 0.1em; color: var(--olive); text-transform: uppercase;
+    text-decoration: none; transition: color 0.18s;
+  }
+  .proj-link::after { content: ' →'; }
+  .proj-link:hover { color: var(--rust); }
+
+  /* ── ACHIEVEMENTS ── */
+  .achievements { background: var(--warm); }
+  .ach-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+  .ach-card {
+    border-top: 2px solid var(--rust);
+    padding-top: 1.5rem;
+  }
+  .ach-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem; font-weight: 700;
+    color: var(--rust); line-height: 1; margin-bottom: 0.4rem;
+  }
+  .ach-label {
+    font-size: 0.88rem; color: var(--olive); line-height: 1.55;
+  }
+
+  /* ── CERTIFICATIONS ── */
+  .certs { background: var(--cream); }
+  .cert-row {
+    display: flex; flex-wrap: wrap; gap: 1rem;
+  }
+  .cert-chip {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border: 1px solid var(--mist); background: white;
+    transition: border-color 0.2s;
+  }
+  .cert-chip:hover { border-color: var(--rust); }
+  .cert-chip-icon { font-size: 1.4rem; }
+  .cert-chip-text {}
+  .cert-name {
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    color: var(--ink); letter-spacing: 0.04em;
+  }
+  .cert-body {
+    font-size: 0.78rem; color: var(--olive);
+  }
+
+  /* ── LANGUAGES ── */
+  .langs-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 2rem; }
+  .lang-item {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 1rem 1.5rem; border: 1px solid var(--mist);
+    min-width: 110px;
+  }
+  .lang-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem; font-weight: 600; color: var(--ink);
+  }
+  .lang-level {
+    font-family: 'DM Mono', monospace; font-size: 0.62rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--rust);
+    margin-top: 0.2rem;
+  }
+
+  /* ── CONTACT ── */
+  .contact {
+    background: var(--dark); color: var(--cream);
+    text-align: center; padding: 8rem 5vw;
+  }
+  .contact h2 { color: var(--cream); margin-bottom: 1rem; }
+  .contact .sh-num { color: var(--rust-dim); }
+  .contact p {
+    color: #888; font-size: 1rem; margin-bottom: 3rem;
+    max-width: 50ch; margin-left: auto; margin-right: auto; line-height: 1.8;
+  }
+  .contact-links { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+  .contact .btn-primary { background: var(--rust); }
+  .contact .btn-outline { color: #aaa; border-color: #444; }
+  .contact .btn-outline:hover { background: #444; color: var(--cream); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--dark); border-top: 1px solid #1e1d19;
+    padding: 1.5rem 5vw;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  footer span {
+    font-family: 'DM Mono', monospace; font-size: 0.67rem;
+    color: #444; letter-spacing: 0.07em;
+  }
+
+  /* ── SCROLL ANIM ── */
+  .fade-up {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── MOBILE ── */
+  @media (max-width: 820px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { padding: 3rem 1.5rem; }
+    section { padding: 4.5rem 1.5rem; }
+    .tracks { grid-template-columns: 1fr; }
+    .proj-grid { grid-template-columns: 1fr; }
+    .ach-grid { grid-template-columns: repeat(2, 1fr); }
+    .exp-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">KT_</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="eyebrow">Credit Risk · Data Science · South Africa</p>
+    <h1>Khoro<br><em>Tshivhula</em></h1>
+    <p class="hero-summary">
+      Credit Risk & Lending Specialist with 8+ years in South African financial services — 
+      now combining deep domain expertise with data science to drive smarter, faster credit decisions.
+    </p>
+    <div class="dual-cta">
+      <a href="#experience" class="btn btn-primary">View Experience</a>
+      <a href="#contact" class="btn btn-outline">Get in Touch</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-stats">
+      <div class="hstat">
+        <div class="hstat-num">>90%</div>
+        <div class="hstat-label">Repayment rate maintained</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-num">&lt;4%</div>
+        <div class="hstat-label">Default rate across portfolio</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-num">60%</div>
+        <div class="hstat-label">NPL recovery rate achieved</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-num">8+</div>
+        <div class="hstat-label">Years in financial services</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DUAL TRACK -->
+<section class="dualtrack" id="about">
+  <div class="sh fade-up">
+    <span class="sh-num">01 /</span>
+    <h2>A Dual Expertise</h2>
+  </div>
+  <div class="tracks fade-up">
+    <div class="track">
+      <div class="track-head">Credit Risk & Lending</div>
+      <p class="track-body">
+        Over eight years at The Small Enterprise Foundation, I've managed the full credit lifecycle 
+        — from client onboarding and affordability assessments to disbursement and collections optimisation. 
+        My work spans 54 groups across 10 centres, delivering consistent results in portfolio quality and 
+        regulatory compliance under the National Credit Act (NCA).
+      </p>
+      <div class="pill-group">
+        <span class="pill">Credit Risk Assessment</span>
+        <span class="pill">Affordability Analysis</span>
+        <span class="pill">Loan Origination</span>
+        <span class="pill">Collections Optimisation</span>
+        <span class="pill">NCA Compliance</span>
+        <span class="pill">Portfolio Management</span>
+        <span class="pill">Client Retention</span>
+        <span class="pill">Risk Mitigation</span>
+      </div>
+    </div>
+    <div class="track">
+      <div class="track-head">Data Science & Analytics</div>
+      <p class="track-body">
+        To complement my domain knowledge, I've been building hands-on data science skills through 
+        internships and independent projects — applying machine learning, exploratory data analysis, 
+        and predictive modelling to real datasets. I bring both the business context and the technical 
+        ability to execute data-driven credit decisioning.
+      </p>
+      <div class="pill-group">
+        <span class="pill">Python</span>
+        <span class="pill">pandas · NumPy</span>
+        <span class="pill">scikit-learn</span>
+        <span class="pill">Logistic Regression</span>
+        <span class="pill">Random Forest</span>
+        <span class="pill">EDA</span>
+        <span class="pill">Data Visualisation</span>
+        <span class="pill">Excel</span>
+        <span class="pill gold">ISC² CC</span>
+        <span class="pill gold">Project Mgmt — Merit</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="experience" id="experience">
+  <div class="sh fade-up">
+    <span class="sh-num">02 /</span>
+    <h2>Professional Experience</h2>
+  </div>
+  <div class="exp-grid fade-up">
+
+    <div class="exp-card">
+      <div class="exp-period">Jan 2024 – May 2025</div>
+      <div class="exp-role">Branch Operations Coordinator</div>
+      <div class="exp-org">The Small Enterprise Foundation · Limpopo & Vryburg</div>
+      <ul class="exp-bullets">
+        <li>Managed full credit lifecycle: application, assessment, approval, disbursement, and collections across 10 centres and 54 groups</li>
+        <li>Maintained &gt;90% repayment rate and &lt;4% default rate across the active loan portfolio</li>
+        <li>Recovered 60% of non-performing loans, improving overall portfolio health</li>
+        <li>Achieved 86% client retention through proactive relationship and risk management</li>
+        <li>Conducted affordability assessments using income, expenses, and financial behaviour data</li>
+        <li>Trained staff on credit processes, improving assessment quality and consistency</li>
+      </ul>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-period">Jun 2023 – Dec 2023</div>
+      <div class="exp-role">Risk & Compliance Officer</div>
+      <div class="exp-org">The Small Enterprise Foundation · Limpopo</div>
+      <ul class="exp-bullets">
+        <li>Conducted detailed credit risk assessments on loan applications and identified risk exposure</li>
+        <li>Ensured full compliance with the National Credit Act (NCA) and internal lending policies</li>
+        <li>Reviewed and updated credit assessment tools, policies, and operational documentation</li>
+        <li>Generated risk and performance reports to support credit decision-making</li>
+        <li>Strengthened internal controls to reduce operational and credit risk</li>
+      </ul>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-period">Sep 2018 – May 2023</div>
+      <div class="exp-role">Business Development Associate</div>
+      <div class="exp-org">The Small Enterprise Foundation · Limpopo</div>
+      <ul class="exp-bullets">
+        <li>Analysed market trends and client data to identify lending opportunities and expansion areas</li>
+        <li>Maintained 80%+ client satisfaction score over 5 consecutive years</li>
+        <li>Delivered financial literacy training, improving borrower quality and repayment behaviours</li>
+        <li>Built strategic partnerships to increase client acquisition and lending reach</li>
+        <li>Supported strategic planning through performance reporting and market insights</li>
+      </ul>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-period">Jan 2017 – Aug 2018</div>
+      <div class="exp-role">R&D Assistant</div>
+      <div class="exp-org">The Small Enterprise Foundation · Limpopo & Gauteng</div>
+      <ul class="exp-bullets">
+        <li>Supported research through data collection, analysis, and reporting</li>
+        <li>Conducted literature reviews and contributed to development of research insights</li>
+        <li>Assisted in data visualisation and preparation of technical reports</li>
+      </ul>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-period">2025–2026 · Internship</div>
+      <div class="exp-role">Data Science Intern</div>
+      <div class="exp-org">Datamite · Remote</div>
+      <ul class="exp-bullets">
+        <li>Built a blood donor prediction model using Logistic Regression, Random Forest, and Decision Tree</li>
+        <li>Addressed class imbalance on a 576-donor dataset, achieving ROC AUC 0.6885</li>
+        <li>Recommended Logistic Regression for production due to superior interpretability and recall</li>
+      </ul>
+    </div>
+
+    <div class="exp-card">
+      <div class="exp-period">2026 · Internship</div>
+      <div class="exp-role">Data Science Intern</div>
+      <div class="exp-org">CodeAlpha · Remote</div>
+      <ul class="exp-bullets">
+        <li>Analysed COVID-19 impact on unemployment across 28 Indian states (May 2019–June 2020)</li>
+        <li>Delivered EDA, seasonal trend detection, rural vs. urban comparison, and predictive modelling</li>
+        <li>Provided policy-relevant insights and a deployable prediction function</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- KEY ACHIEVEMENTS -->
+<section class="achievements fade-up">
+  <div class="sh">
+    <span class="sh-num">03 /</span>
+    <h2>Key Achievements</h2>
+  </div>
+  <div class="ach-grid">
+    <div class="ach-card">
+      <div class="ach-num">&gt;90%</div>
+      <div class="ach-label">Repayment rate maintained across the active loan portfolio</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-num">60%</div>
+      <div class="ach-label">Non-performing loan recovery rate, restoring portfolio health</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-num">86%</div>
+      <div class="ach-label">Client retention rate through effective risk and relationship management</div>
+    </div>
+    <div class="ach-card">
+      <div class="ach-num">5 yrs</div>
+      <div class="ach-label">Consistent 80%+ client satisfaction score over five consecutive years</div>
+    </div>
+  </div>
+</section>
+
+<!-- DATA SCIENCE PROJECTS -->
+<section class="projects" id="projects">
+  <div class="sh fade-up">
+    <span class="sh-num">04 /</span>
+    <h2>Data Science Projects <span style="font-family:'DM Mono',monospace;font-size:0.9rem;color:var(--rust);font-weight:400;">— all 10</span></h2>
+  </div>
+  <div class="proj-grid fade-up">
+
+    <!-- 1 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Datamite-PRCP-1011-Blood-Donation-Prediction" target="_blank">
+      <div class="proj-icon">🩸</div>
+      <div class="proj-title">Blood Donation Prediction</div>
+      <div class="proj-desc">Predicted donor return behaviour using Logistic Regression, Random Forest, and Decision Tree on a 576-donor Taiwanese dataset. Addressed class imbalance with stratified splits and class_weight='balanced', achieving ROC AUC 0.6885. Recommended Logistic Regression for production due to superior recall.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">scikit-learn · pandas · Python</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 2 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/CodeAlpha_COVID-19-Unemployment-Analysis" target="_blank">
+      <div class="proj-icon">📊</div>
+      <div class="proj-title">COVID-19 Unemployment Analysis</div>
+      <div class="proj-desc">Full data science pipeline analysing pandemic impact on unemployment across 28 Indian states (May 2019–June 2020). Includes EDA, seasonal trend detection, rural vs. urban comparison, region-wise disparities, Decision Tree and Linear Regression modelling, and a deployable prediction function with policy insights.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">pandas · scikit-learn · matplotlib</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 3 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Syntecxhub_-Time-Series-Category-Charts" target="_blank">
+      <div class="proj-icon">📈</div>
+      <div class="proj-title">Superstore Sales Visualisation</div>
+      <div class="proj-desc">Time-series and category analysis of $12.6M Superstore sales (2011–2014). Produced daily, monthly, and quarterly line charts, a bar chart, and a pie chart with PNG exports. Technology led at 37.5% of sales. Includes a detailed formatting guide covering best practices for data labels, chart type selection, and colour accessibility.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">matplotlib · pandas · Python</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 4 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Syntecxhub_Data_Cleaning_Utility" target="_blank">
+      <div class="proj-icon">🧹</div>
+      <div class="proj-title">Data Cleaning Utility</div>
+      <div class="proj-desc">Reusable Python toolkit that detects and handles missing values (drop/fill/impute), fixes incorrect dtypes and parses dates, removes duplicates, standardises column names, and outputs a cleaned dataset alongside a brief cleaning log — ready to slot into any data pipeline.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">pandas · Jupyter · Python</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 5 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Syntecxhub_Numpy_Data_Explorer" target="_blank">
+      <div class="proj-icon">🔢</div>
+      <div class="proj-title">NumPy Data Explorer</div>
+      <div class="proj-desc">Deep dive into numerical computing fundamentals: array creation, indexing and slicing, mathematical and statistical axis-wise operations, reshaping and broadcasting for efficient computation. Also covers save/load of .npy/.npz files and a head-to-head performance comparison of NumPy vs. standard Python lists.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">NumPy · Jupyter · Python</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 6 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Syntecxhub_Pandas_CSV_Reader_-_Basic_Analysis" target="_blank">
+      <div class="proj-icon">📋</div>
+      <div class="proj-title">Pandas CSV Reader & Basic Analysis</div>
+      <div class="proj-desc">Foundational data analysis toolkit: reads CSV and Excel files into DataFrames, inspects head/tail/types, computes summary statistics (mean, median, min, max, count), filters rows, selects columns, slices subsets, and saves filtered results to CSV and Excel — a reusable starting point for any dataset.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">pandas · openpyxl · Jupyter</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 7 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Syntecxhub-Netflix-Media-dataset-EDA" target="_blank">
+      <div class="proj-icon">🎬</div>
+      <div class="proj-title">Netflix Media Dataset EDA</div>
+      <div class="proj-desc">Exploratory data analysis of the Netflix dataset featuring statistical summary boxes, correlation analysis, hypothesis testing (t-test), geographic insights, and an interactive Plotly dashboard — one of the more technically ambitious projects, combining inferential statistics with interactive visualisation in a single HTML deliverable.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">Plotly · seaborn · pandas · HTML</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 8 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Syntecxhub-Titanic-dataset-EDA" target="_blank">
+      <div class="proj-icon">🚢</div>
+      <div class="proj-title">Titanic Dataset EDA</div>
+      <div class="proj-desc">Exploratory Data Analysis on the classic Titanic dataset, uncovering survival patterns through statistics and visualisations. Investigates the influence of passenger class, sex, age, and fare on survival outcomes — a thorough exercise in EDA and data storytelling.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">pandas · matplotlib · seaborn · Jupyter</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 9 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Syntecxhub-Correlation-Heatmap-Pairwise-Relationships" target="_blank">
+      <div class="proj-icon">🔥</div>
+      <div class="proj-title">Correlation Heatmap & Pairwise Relationships</div>
+      <div class="proj-desc">Superstore correlation analysis producing a masked, annotated heatmap and pairplot. Key findings: strongest positive correlation is sales vs shipping cost (r=0.768); strongest negative is profit vs discount (r=−0.316). Demonstrates applied knowledge of feature relationships critical to credit and risk modelling.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">seaborn · matplotlib · pandas · Jupyter</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+    <!-- 10 -->
+    <a class="proj-card" href="https://github.com/KTshivhula/Syntecxhub-Statistical-Plots-Distribution-Analysis" target="_blank">
+      <div class="proj-icon">📉</div>
+      <div class="proj-title">Statistical Plots & Distribution Analysis</div>
+      <div class="proj-desc">Superstore sales distribution analysis using histograms, KDEs, and boxplots across categories. Includes outlier detection (IQR method), skewness calculation, and PNG exports — each chart paired with a one-paragraph interpretation for non-technical audiences.</div>
+      <div class="proj-foot">
+        <span class="proj-tech">seaborn · matplotlib · pandas · Jupyter</span>
+        <span class="proj-link">GitHub</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- CERTIFICATIONS & LANGUAGES -->
+<section class="certs fade-up">
+  <div class="sh">
+    <span class="sh-num">05 /</span>
+    <h2>Certifications &amp; Languages</h2>
+  </div>
+
+  <div class="cert-row">
+    <div class="cert-chip">
+      <div class="cert-chip-icon">🛡️</div>
+      <div class="cert-chip-text">
+        <div class="cert-name">Certified in Cybersecurity (CC)</div>
+        <div class="cert-body">ISC² · Valid until 2028</div>
+      </div>
+    </div>
+    <div class="cert-chip">
+      <div class="cert-chip-icon">📋</div>
+      <div class="cert-chip-text">
+        <div class="cert-name">Project Management Bundle</div>
+        <div class="cert-body">One Education · Merit</div>
+      </div>
+    </div>
+    <div class="cert-chip">
+      <div class="cert-chip-icon">🎓</div>
+      <div class="cert-chip-text">
+        <div class="cert-name">Senior Certificate</div>
+        <div class="cert-body">Umalusi · Bachelor's Endorsement</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="langs-row">
+    <div class="lang-item"><div class="lang-name">Tshivenda</div><div class="lang-level">Native</div></div>
+    <div class="lang-item"><div class="lang-name">English</div><div class="lang-level">Fluent</div></div>
+    <div class="lang-item"><div class="lang-name">Xitsonga</div><div class="lang-level">Fluent</div></div>
+    <div class="lang-item"><div class="lang-name">Sepedi</div><div class="lang-level">Fluent</div></div>
+    <div class="lang-item"><div class="lang-name">Zulu</div><div class="lang-level">Advanced</div></div>
+    <div class="lang-item"><div class="lang-name">Xhosa</div><div class="lang-level">Advanced</div></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="sh" style="justify-content:center">
+    <span class="sh-num">06 /</span>
+    <h2>Let's Connect</h2>
+  </div>
+  <p>Open to Credit Analyst, Risk Analyst, and Lending Specialist roles — as well as data-driven opportunities where finance meets analytics.</p>
+  <div class="contact-links">
+    <a href="mailto:avhakhor@gmail.com" class="btn btn-primary">avhakhor@gmail.com</a>
+    <a href="https://github.com/KTshivhula" target="_blank" class="btn btn-outline">GitHub</a>
+    <a href="https://linkedin.com/in/khoro-tshivhula" target="_blank" class="btn btn-outline">LinkedIn</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Khoro Avhavhoni Tshivhula</span>
+  <span>Polokwane, Limpopo, South Africa 🇿🇦 · +27 76 529 2955</span>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.fade-up').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
